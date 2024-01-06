@@ -28,16 +28,22 @@ static bool IsSymbol(const char& ch){
 std::unordered_map<std::string, long> Index;
 std::vector<std::unordered_map<std::string, long>> LookUp;
 
-std::string Recommendword(const std::string& InputWord){
+std::vector<std::string> Recommendword(const std::string& InputWord){
+    std::vector<std::string> Recommend;
     auto Found = Index.find(InputWord);
-    if(Found == Index.end()) return "";
+    if(Found == Index.end()) return Recommend;
     else{
         auto LookUpIndex = Index[InputWord];
-        int Maxcount = -1;
-        std::string Recommend;
+	int TotalOccurence{};
         for(const auto& [word, count]: LookUp[LookUpIndex]){
-            if(count > Maxcount) Recommend = word;
+          TotalOccurence += count;  
         }
+	for(const auto& [word, count]: LookUp[LookUpIndex]){
+       	  float Probability = (float)count / (float)TotalOccurence;
+	  if(Probability > 0.60f){
+	     Recommend.emplace_back(word);	  
+	  }
+	}
         return Recommend;
     }
 }
@@ -116,5 +122,8 @@ int main(){
 //       std::cout << "==========================\n";
 //   }
 
-  std::cout << Recommendword("mero");
+   auto Recommendation = Recommendword("mero");
+   for(const auto& word: Recommendation){
+     std::cout << word << '\n';	   
+   }
 }
