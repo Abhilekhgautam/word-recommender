@@ -3,7 +3,7 @@
 #include <iostream>
 #include <unordered_map>
 #include <vector>
-
+#include <unordered_set>
 #include <boost/algorithm/string.hpp>
 
 //#include "json.hpp"
@@ -11,19 +11,13 @@
 
 //using json = nlohmann::json;
 
-static const std::vector<char> Symbols
+static const std::unordered_set<char> Symbols
                                     {'#', '.', ',',  ';', '&', '{',
                                     '}', ']', '[', '(', ')', '\t',
                                     '<', '>', '+', '-',  '=', '"', ':', '/','|','='
                                     , '@', '!', '$', '%', '^', '*', '_', '~', '?'
                                     };
 
-static bool IsSymbol(const char& ch){
-    for(const auto& s: Symbols){
-        if (ch == s) return true;
-    }
-    return false;
-}
 
 std::unordered_map<std::string, long> Index;
 std::vector<std::unordered_map<std::string, long>> LookUp;
@@ -77,7 +71,7 @@ int main(){
    // read the lines into a vector
    while(FilteredData.good()) {
        FilteredData.get(Temp);
-       if (!IsSymbol(Temp) && Temp != '\n'){
+       if (!Symbols.count(Temp) && Temp != '\n'){
            Content += Temp;
        } else if(Temp == '\n'){
            boost::algorithm::trim(Content);
