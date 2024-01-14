@@ -11,6 +11,7 @@
 
 //using json = nlohmann::json;
 
+// unwanted tokens to remove
 static const std::unordered_set<char> Symbols
                                     {'#', '.', ',',  ';', '&', '{',
                                     '}', ']', '[', '(', ')', '\t',
@@ -19,26 +20,51 @@ static const std::unordered_set<char> Symbols
                                     };
 
 
+static constexpr float PROBABILITY_THRESHOLD = 0.60f;
+
 std::unordered_map<std::string, long> Index;
 std::vector<std::unordered_map<std::string, long>> LookUp;
 
-std::vector<std::string> Recommendword(const std::string& InputWord){
-    std::vector<std::string> Recommend;
-    auto Found = Index.find(InputWord);
-    if(Found == Index.end()) return Recommend;
+struct Recommendation{
+ std::string word;
+ float probability;
+};
+
+Recommendation RecommendWord(const std::string& word);
+
+std::vector<std::string> RecommendSentence(const std::string& InputWord){
+  float HighestProbability;
+  std::vector<std::string> Recommend;
+  std::string Word = InputWord;
+  do{
+     Recommendation Data = RecommendWord(Word);
+     HighestProbability = Data.probability;
+     if(HighestProbability > 0.60f){
+	   Recommend.emplace_back(Data.word);
+       Word = Data.word;
+     } else break;
+  }while(HighestProbability > 0.60f);
+
+  return Recommend;
+}
+// why not a vector?? we will only have a single word if probability is
+// greater than 60 percent
+Recommendation RecommendWord(const std::string& word){
+    auto Found = Index.find(word);
+    if(Found == Index.end()) return Recommendation{};
     else{
-        auto LookUpIndex = Index[InputWord];
+        auto LookUpIndex = Index[word];
 	int TotalOccurence{};
         for(const auto& [word, count]: LookUp[LookUpIndex]){
           TotalOccurence += count;  
         }
 	for(const auto& [word, count]: LookUp[LookUpIndex]){
        	  float Probability = (float)count / (float)TotalOccurence;
-	  if(Probability > 0.60f){
-	     Recommend.emplace_back(word);	  
+	  if(Probability >= PROBABILITY_THRESHOLD){
+	     return Recommendation{word, Probability}; 
 	  }
 	}
-        return Recommend;
+        return Recommendation{};
     }
 }
 
@@ -79,7 +105,6 @@ int main(){
        }
    }
 
-
    std::vector<std::string> SplitByNewLine;
    boost::split(SplitByNewLine, Content, boost::is_any_of("\n"));
 
@@ -116,8 +141,8 @@ int main(){
 //       std::cout << "==========================\n";
 //   }
 
-   auto Recommendation = Recommendword("mero");
+   auto Recommendation = RecommendSentence("stuti");
    for(const auto& word: Recommendation){
-     std::cout << word << '\n';	   
+     std::cout << word << ' ';
    }
 }
